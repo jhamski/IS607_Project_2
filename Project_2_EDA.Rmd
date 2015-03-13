@@ -1,72 +1,140 @@
 ---
-title: "Project 2 Exploratory data analysis using a supplied dataset"
+title: "Project 2 - Exploratory data analysis using a supplied dataset"
 author: "J. Hamski"
 date: "March 7, 2015"
 output: html_document
 ---
 ***
+##Assignment Requirements
+1. Perform an exploratory data analysis (EDA) on the dataset and draw conclusions
+2. Use ggplot2
+3. Deliver report in Markdown on RPubs  
+  
+> Packages used: dplyr, tidyr, ggplot2, RColorBrewer, grid, scales
+  
+##EDA Resources
 
-#Data Preparation
+From the [EDA Wikipedia Page](http://en.wikipedia.org/wiki/Exploratory_data_analysis), the objectives of EDA are:  
+1. Suggest hypotheses about the causes of observed phenomena  
+2. Assess assumptions on which statistical inference will be based  
+3. Support the selection of appropriate statistical tools and techniques  
+4. Provide a basis for further data collection through surveys or experiments  
 
-The data for this project was only provided in the PDF. So, I performed the following steps to prepare it for loading into R.
-1. Created a screenshot (data_table.png) of the table only.
-2. Uploaded the screenshot image to Online OCR http://www.onlineocr.net/
-3. Converted data table using Online OCR to a MS Excel .xlsx file
-4. Spot-checked the data and fixed one error where the OCR read an "8" as "a"
-5. Saved the data as OCR_data_table.csv
+I relied on [*Experimental Design for Behavioral and Social Sciences, Ch. 4, EDA (Seltman, H; 2013)*](http://www.stat.cmu.edu/~hseltman/309/Book/) for guidance on the statistical underpinnings of EDA. I referenced [Tutorial 3: Graphics and Exploratory Data Analysis in R (Piennar, J. and Miller, T.; 2013)](http://bio.fsu.edu/miller/docs/Tutorials/Tutorial3_Graphics.pdf) and [Introduction to R and Exploratory data analysis (Simpson, G; 2006)](http://cc.oulu.fi/~jarioksa/opetus/metodi/eda.pdf) for R-specific EDA techniques. 
 
-This method worked reasonably well for this small image. A privately hosted or desktop solution would be better if the data needs to be kept private. Additional QA/QC would be appropriate for a larger dataset. 
+##Data Preparation
 
-> Packages used: datasets, ggplot2, dplyr
+The data for this project were provided in a PDF. So, I performed the following steps to prepare it for loading into R.  
+1. Created a screenshot (data_table.png) of the table only.  
+2. Uploaded the screenshot image to Online OCR http://www.onlineocr.net/  
+3. Converted data table using Online OCR to a MS Excel .xlsx file  
+4. Spot-checked the data and fixed one error where the OCR read an "8" as "a"  
+5. Saved the data as 'OCR_data_table.csv'  
+
+This method worked well for this small image. A privately hosted or desktop OCR solution would be better if the data needs to be kept private. Additional QA/QC would be required for a larger dataset. 
 
 ```{r, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 library(dplyr)
 library(tidyr)
 ```
 ```{r}
-
 input <- read.csv("OCR_data_table.csv", skip = 1)
+DF.1 <-data.frame(input[1:2])
+colnames(DF.1) <-c("x", "y")
+DF.2 <-data.frame(input[3:4])
+colnames(DF.2) <-c("x", "y")
+DF.3 <-data.frame(input[5:6])
+colnames(DF.3) <-c("x", "y")
+DF.4 <-data.frame(input[7:8])
+colnames(DF.4) <-c("x", "y")
 
-#below is dummy data, still need to format input
-X1 <- c(10.0, 8.0, 13.0)
-Y1 <- c(8.04, 6.95, 7.58)
-X2 <- c(10.0, 8.0, 13.0)
-Y2 <- c(9.14, 8.14, 8.74)
-X3 <- c(10.0, 8.0, 13.0)
-Y3 <- c(7.46, 6.77, 12.74)
-X4 <- c(8.0, 8.0, 8.0)
-Y4 <- c(6.58, 5.76, 7.71)
-
-DF <-data.frame(X1, Y1, X2, Y2, X3, Y3, X4, Y4)
+DF.all<- cbind(DF.1, DF.2, DF.3, DF.4)
 ```
+***
+#SECTION 1 - Bivariate Analysis
+***
+##Dataframe 1 - "I"
+###Summary Statistics and Non-graphical EDA
 
-## Summary Statistics
+Both parameters in DF.1 are numeric variables. Their summary statistics are:
+```{r}
+summary(DF.1)
+```
+X and Y have a similar range, with a lower bound of approximately 4 and an upper bound of approximately 14 and 10, respectively. The central tendency of the two parameters diverge by approximately 1.5 units with x being the larger mean (9 and 7.5, respectively).
 
 ```{r}
-summary(DF)
+sd(DF.1$x)
+sd(DF.1$y)
 ```
+The spread of the two parameters is 
 
-
-## Graphic Exploration 
+## Graphical EDA 
+This EDA uses my own "house theme" that I developed. The default graphics for ggplot2 are stellar, but by incorporating your own theme you can make it easier to identify and place your own work. See Appendix 1 - Jim's House Theme for more information
 ```{r, warning=FALSE}
 library(ggplot2)
+library(RColorBrewer)
+library(scales)
+library(grid)
 
+```
+
+
+Basic Scatterplot for Category 1
+```{r}
+#ggplot(data = DF.1, aes(x = x, y = y)) + geom_point() + JHT()
+```
+
+##Dataframe 2 - "II"
+###Summary Statistics and Non-graphical EDA
+## Graphical EDA 
+
+
+
+
+***
+SECTION 2 MULTIVARIATE ANALYSIS  
+***
+
+##Appendix 1 - Jim's House Theme
+
+```{r}
 #Jim's House Theme
-
-#JHT <- theme()
-```
-
-Basic Scatterplot for Category 1
-```{r}
-ggplot(data = DF, aes(x = X1, y = Y1)) + geom_point() + ggplot(data = DF, aes(x = X2, y = Y2)) + geom_point()
-```
-
-Basic Scatterplot for Category 1
-```{r}
-ggplot(data = DF, aes(x = X2, y = Y2)) + geom_point()
-```
-
-Basic Scatterplot for Category 1
-```{r}
-ggplot(data = DF, aes(x = X3, y = Y3)) + geom_point()
+JHT <- function(){
+# Generate the colors for the chart procedurally with RColorBrewer
+  palette <- brewer.pal("Greys", n=9)
+  color.background = palette[1]
+  color.grid.major = palette[3]
+  color.axis.text = palette[6]
+  color.axis.title = palette[9]
+  color.title = palette[9]
+  
+  # Begin construction of chart
+  theme_bw(base_size=9) +
+    
+    # Set the entire chart region to a light gray color
+    theme(panel.background=element_rect(fill=color.background, color=color.background)) +
+    theme(plot.background=element_rect(fill=color.background, color=color.background)) +
+    theme(panel.border=element_rect(color=color.background)) +
+    
+    # Format the grid
+    theme(panel.grid.major=element_line(color=color.grid.major,size=.25, linetype = "longdash")) + 
+    theme(axis.line = element_line(color=color.grid.major, size = .5))+
+    theme(panel.grid.minor=element_blank()) +
+    theme(axis.ticks=element_blank()) +
+    
+    # Format the legend, but hide by default
+    theme(legend.position="none") +
+    theme(legend.background = element_rect(fill=color.background)) +
+    theme(legend.text = element_text(size=7,color=color.axis.title)) +
+    
+    # Set title and axis labels, and format these and tick marks
+    theme(plot.title=element_text(color=color.title, size=10, vjust=1.25)) +
+    theme(axis.text.x=element_text(size=12,color=color.axis.text)) +
+    theme(axis.text.y=element_text(size=12,color=color.axis.text)) +
+    theme(axis.title.x=element_text(size=14,color=color.axis.title)) +
+    theme(axis.title.y=element_text(size=14,color=color.axis.title)) +
+    
+    # Plot margins
+    theme(plot.margin = unit(c(0.35, 0.2, 0.3, 0.35), "cm"))
+}
 ```
