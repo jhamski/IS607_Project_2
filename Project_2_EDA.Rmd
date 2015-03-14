@@ -5,12 +5,12 @@ date: "March 7, 2015"
 output: html_document
 ---
 ***
-##Assignment Requirements
+##Project Requirements
 1. Perform an exploratory data analysis (EDA) on the dataset and draw conclusions
 2. Use ggplot2
 3. Deliver report in Markdown on RPubs  
   
-> Packages used: dplyr, tidyr, ggplot2, RColorBrewer, grid, scales
+> Packages used: dplyr, tidyr, moments, ggplot2, RColorBrewer, grid, scales
   
 ##EDA Resources
 
@@ -25,12 +25,13 @@ I relied on [*Experimental Design for Behavioral and Social Sciences, Ch. 4, EDA
 ##Data Preparation
 
 The data for this project were provided in a PDF. So, I performed the following steps to prepare it for loading into R.  
-1. Created a screenshot (data_table.png) of the table only.  
+1. Created a screenshot (data_table.png) of the table only.    
 2. Uploaded the screenshot image to Online OCR http://www.onlineocr.net/  
 3. Converted data table using Online OCR to a MS Excel .xlsx file  
 4. Spot-checked the data and fixed one error where the OCR read an "8" as "a"  
-5. Saved the data as 'OCR_data_table.csv'  
-
+5. Saved the data as 'OCR_data_table.csv'    
+**data_table.png**  
+![](data_table.png)   
 This method worked well for this small image. A privately hosted or desktop OCR solution would be better if the data needs to be kept private. Additional QA/QC would be required for a larger dataset. 
 
 ```{r, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
@@ -51,52 +52,61 @@ colnames(DF.4) <-c("x", "y")
 DF.all<- cbind(DF.1, DF.2, DF.3, DF.4)
 ```
 ***
-#SECTION 1 - Bivariate Analysis
+#SECTION 1 - Univariate and Bivariate Analysis
 ***
 ##Dataframe 1 - "I"
-###Summary Statistics and Non-graphical EDA
-
+### Univariate Summary Statistics and Non-graphical EDA
+**Summary Statistics**
 Both parameters in DF.1 are numeric variables. Their summary statistics are:
 ```{r}
 summary(DF.1)
 ```
-X and Y have a similar range, with a lower bound of approximately 4 and an upper bound of approximately 14 and 10, respectively. The central tendency of the two parameters diverge by approximately 1.5 units with x being the larger mean (9 and 7.5, respectively).
+X and Y have a similar range, with a lower bound of approximately 4 and an upper bound of approximately 14 and 10, respectively. The central tendency of the two parameters diverge by approximately 1.5 units with x being the larger mean (9 and 7.5, respectively). For both x and y the median and mean are the same or equal, indicating a symmetrical distribution. 
 
 ```{r}
 sd(DF.1$x)
 sd(DF.1$y)
 ```
-The spread of the two parameters is 
+The dispersion of the two parameters as indicated by the standard deviation is x = 3.3 units and y = 2.0 units.   
 
-## Graphical EDA 
-This EDA uses my own "house theme" that I developed. The default graphics for ggplot2 are stellar, but by incorporating your own theme you can make it easier to identify and place your own work. See Appendix 1 - Jim's House Theme for more information
+**IQR - Interquartile Range**
+
+As stated in Seltman, 2013: *"The IQR is a more robust measure of spread than the variance or standard deviation. Any number of values in the top or bottom quarters of the data can be moved any distance from the median without affecting the IQR at all. More practically, a few extreme outliers have little or no effect on the IQR."* The IQC for DF.1 is:
+```{r}
+(IQR.x <- quantile(DF.1$x)[4] - quantile(DF.1$x)[2])
+(IQR.x <- quantile(DF.1$y)[4] - quantile(DF.1$y)[2])
+```
+
+**Skewedness and Krutosis**
+While the comparison of mean and median indicated the distributions of x and y would have little to no skew, I calculate it here to be comprehensive. Kurtosis measures the "peakedness" of the distribution relative to the Gaussian distribution. 
+```{r, warning=FALSE}
+library(moments)
+
+skewness(DF.1$x)
+kurtosis(DF.1$x) 
+skewness(DF.1$y)
+kurtosis(DF.1$y)
+```
+Both measures of kurtosis are less than 3, indicating platykurtic distributions less peaked than a Gaussian distribution. 
+
+###Bivariate Non-Graphical EDA  
+Here I investigate the two variables x and y together using non-graphical techniques.   
+**Covariance and Correlation**
+```{r}
+cov(DF.1)
+cor(DF.1)
+```
+The covariance between x and y is 5.5. This positive covariance values suggest that when one measurement is above the mean the other will probably also be above the mean, and vice versa. The correlation between x and y is 0.82, indicating a somewhat strong positive correlation between the two variables. 
+
+### Graphical EDA 
+This EDA uses my own "house theme". The default graphics for ggplot2 are stellar, but by incorporating your own theme you can make it easier to identify and place your own work. 
 ```{r, warning=FALSE}
 library(ggplot2)
 library(RColorBrewer)
 library(scales)
 library(grid)
-
 ```
-
-
-Basic Scatterplot for Category 1
-```{r}
-#ggplot(data = DF.1, aes(x = x, y = y)) + geom_point() + JHT()
-```
-
-##Dataframe 2 - "II"
-###Summary Statistics and Non-graphical EDA
-## Graphical EDA 
-
-
-
-
-***
-SECTION 2 MULTIVARIATE ANALYSIS  
-***
-
-##Appendix 1 - Jim's House Theme
-
+**Jim's House Theme**
 ```{r}
 #Jim's House Theme
 JHT <- function(){
@@ -138,3 +148,67 @@ JHT <- function(){
     theme(plot.margin = unit(c(0.35, 0.2, 0.3, 0.35), "cm"))
 }
 ```
+
+Basic Scatterplot for Category 1
+
+```{r}
+split.screen(figs=c(2,1))
+split.screen(c(1,2), screen=1)
+
+screen(1)
+plot(DF.1)
+
+screen(3)
+hist(DF.1$x)
+screen(4)
+hist(DF.1$y)
+
+screen(1)
+plot(DF.1)
+screen(2)
+hist(DF.1$x)
+screen(3)
+hist(DF.1$y)
+screen(4)
+plot(DF.1)
+close.screen(all = TRUE)
+
+```
+
+
+
+
+
+```{r}
+ggplot(data = DF.1, aes(x = x, y = y)) + geom_point() #+ JHT()
+ggplot(data = DF.1) + stat_density(aes(x = x, y=min(x)+diff(range(x))), geom="line") #+ JHT()
+
+stat_density(data = DF.1, x = x, geom = "area", aes(x = x, y = y))
+```
+
+```{r}
+ggplot(DF.1, aes(x = y), binwidth = 2) + 
+       geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5) + 
+       geom_density(colour = 'blue') + xlab(expression(bold('Simulated Samples'))) + 
+       ylab(expression(bold('Density')))
+```
+
+
+
+
+##Dataframe 2 - "II"
+###Summary Statistics and Non-graphical EDA
+
+###Bivariate Non-Graphical EDA
+
+### Graphical EDA 
+
+
+
+
+
+
+***
+SECTION 2 MULTIVARIATE ANALYSIS  
+***
+
