@@ -10,7 +10,7 @@ output: html_document
 2. Use ggplot2
 3. Deliver report in Markdown on RPubs  
   
-> Packages used: knitr, dplyr, tidyr, moments, ggplot2
+> Packages used: knitr, dplyr, tidyr, moments, ggplot2, grid, gridExtra
   
 ##EDA Resources
 
@@ -57,7 +57,7 @@ DF.all<- cbind(DF.1, DF.2, DF.3, DF.4)
 #SECTION 1 - Univariate and Bivariate Analysis
 ***
 ##Dataframe 1 - "I"
-### Univariate Summary Statistics and Non-graphical EDA
+### Univariate Summary Statistics and Non-graphical EDA (1)
 **Summary Statistics**
 Both parameters in DF.1 are numeric variables. Their summary statistics are:
 ```{r}
@@ -100,7 +100,7 @@ kable(data.frame(IQR1.x, IQR1.y), col.names = c("X", "Y"), caption = "Kurtosis f
   
 Both measures of kurtosis are less than 3, indicating platykurtic distributions less peaked than a Gaussian distribution. 
 
-###Bivariate Non-Graphical EDA  
+###Bivariate Non-Graphical EDA (1)
 Here I investigate the two variables x and y together using non-graphical techniques.   
 **Covariance and Correlation**
 ```{r}
@@ -111,11 +111,8 @@ kable(data.frame(IQR1.x, IQR1.y), col.names = c("Covariance of X,Y", "Correlatio
 
 The covariance between x and y is 5.5. This positive covariance values suggest that when one measurement is above the mean the other will probably also be above the mean, and vice versa. The correlation between x and y is 0.82, indicating a somewhat strong positive correlation between the two variables. 
 
-### Graphical EDA 
-This EDA uses my own "house theme". The default graphics for ggplot2 are stellar, but by incorporating your own theme you can make it easier to identify and place your own work. 
-```{r, warning=FALSE}
-library(ggplot2)
-```
+### Graphical EDA (1)
+This EDA uses my own "house theme". The default graphic theme for ggplot2 works great, but by incorporating your own theme you can make it easier to identify and place your own work.   
 **Jim's House Theme**
 ```{r}
 #Jim's House Theme
@@ -130,15 +127,11 @@ JHT <-function(){
   theme_bw(base_size=9) +
     theme(panel.background=element_rect(fill=color.plot.area, color=color.plot.area)) +
     theme(plot.background=element_rect(fill=color.background, color=color.background)) +
-    theme(panel.border=element_rect(color=color.background)) +
-  
+    theme(panel.border=element_rect(color="gray20", size = 0.15)) +
     theme(panel.grid.major=element_line(color=color.grid.major,size=.25, 
                                         linetype = "longdash")) + 
     theme(axis.line = element_line(color=color.grid.major, size = .5))+
     theme(panel.grid.minor=element_blank()) +
-    #theme(axis.ticks=element_blank()) +
-    
-    # Set title and axis labels, and format these and tick marks
     theme(plot.title=element_text(color=color.title, size=10)) +
     theme(axis.text.x=element_text(size=12,color=color.axis.text)) +
     theme(axis.text.y=element_text(size=12,color=color.axis.text)) +
@@ -147,11 +140,14 @@ JHT <-function(){
 }
 ```
 **Histogram for x and y**
-```{r}
-
+```{r, warning=FALSE, message=FALSE}
+library(gridExtra)
+library(grid)
+#Placing the graphics in a function allows me to make changes later on without needed to update several sections of code
 hist.plot <- function(data){
- ggplot(data = data, aes(x = x)) + geom_histogram(binwidth = 1) +JHT() +geom_density(color = "red") + ggtitle("Histogram     for DF.1 - x")
-  ggplot(data = data, aes(x = y)) + geom_histogram(binwidth = 1) +JHT() +geom_density(color = "red")+ ggtitle("Histogram for DF.1 - y")  
+ x <- ggplot(data = data, aes(x = x)) + geom_histogram(binwidth = 1) +JHT() +geom_density(color = "red") + ggtitle("Histogram for X")
+ y <- ggplot(data = data, aes(x = y)) + geom_histogram(binwidth = 1) +JHT() +geom_density(color = "red") + ggtitle("Histogram for Y")
+ grid.arrange(x, y, ncol=2) 
 }
 hist.plot(DF.1)
 ```
@@ -163,14 +159,15 @@ The histogram for x shows a uniform distribution. This is characteristic of a in
 In EDA for a bivariate dataset a scatterplot will show the relationship between the two variables.
 ```{r}
 scatter.plot<- function(data){
-  ggplot(data = data, aes(x = x, y = y)) +geom_point() +JHT() + geom_smooth(method="lm", color="red", linetype=2) + geom_rug() + ggtitle("Scatterplot for DF1 with a Line of Best Fit")
+  ggplot(data = data, aes(x = x, y = y)) +geom_point() +JHT() + geom_smooth(method="lm", color="red", linetype=2) + geom_rug() + ggtitle("Scatterplot")
 }
 scatter.plot(DF.1)
 ```
 
+X and y are reasonably well modeled with a linear regression.   
 
 ##Dataframe 2 - "II"
-###Summary Statistics and Non-graphical EDA
+###Summary Statistics and Non-graphical EDA (2)
 
 **Summary Statistics**
 Both parameters in DF.2 are numeric variables. Their summary statistics are:
@@ -178,7 +175,7 @@ Both parameters in DF.2 are numeric variables. Their summary statistics are:
 kable(summary(DF.2), digits = 2, caption = "Summary Statistics for X and Y")
 ```
 
-X has a larger range than y. The it's mean and median are equal, indicating no skew. Y ranges from 3.1 to 9.26 and has a mean of 7.5. This is lower than the median (8.14) and indicates a
+X ranges from 4 to 14 and is uniformly distributed. Y ranges from 3.1 to 9.26 and has a mean of 7.5. This is lower than the median (8.14). 
 
 ** Interquartile Range, Skewness, and Kurtosis**
 
@@ -196,17 +193,9 @@ row.names(stats2) <- c("Standard Deviation", "IQR", "Skewness", "Kurtosis")
 kable(stats2, caption="Standard Deviation, IQR, Skewness, and Kurtosis for X, Y")
 ```
 
+The differences between the mean and median suggested a negative skew in the y variable. This is further shown by a skewness of -1.29. X is uniformly distributed. The kurtosis of y indicate a peak very similar to a Gaussian distribution. 
 
-The dispersion of the two parameters as indicated by the standard deviation is SD(x) = 3.3 units and SD(y) = 2.0 units.   
-
-Like the standard deviation, this shows more spread in the x parameter than y. 
-
-
-While the comparison of mean and median indicated the distributions of x and y would have little to no skew, I calculate it here to be comprehensive. Kurtosis measures the "peakedness" of the distribution relative to the Gaussian distribution. 
-
-Both measures of kurtosis are less than 3, indicating platykurtic distributions less peaked than a Gaussian distribution. 
-
-###Bivariate Non-Graphical EDA  
+###Bivariate Non-Graphical EDA (2)
 **Covariance and Correlation**
 ```{r, echo=FALSE, warning=FALSE}
 CC2 <- data.frame(rbind(cov(DF.2), cor(DF.2)))
@@ -216,7 +205,7 @@ kable(CC2)
 
 The covariance between x and y is 5.5. This positive covariance values suggest that when one measurement is above the mean the other will probably also be above the mean, and vice versa. The correlation between x and y is 0.82, indicating a somewhat strong positive correlation between the two variables. 
 
-### Graphical EDA 
+### Graphical EDA (2)
 
 **Histogram for x and y**  
 ```{r, echo=FALSE}
@@ -232,9 +221,16 @@ In EDA for a bivariate dataset a scatterplot will show the relationship between 
 scatter.plot(DF.2)
 ```
 
+The scatterplot reveals a pattern in the data that is modeled best with a second degree polynomial. 
+
+```{r}
+ggplot(data = DF.2, aes(x = x, y = y)) +geom_point() +JHT() + stat_smooth(method="lm", formula = y ~ poly(x, 2), color="red", linetype=2) + geom_rug() + ggtitle("Scatterplot")
+```
+
+
 
 ##Dataframe 3 - "III"
-###Summary Statistics and Non-graphical EDA
+###Summary Statistics and Non-graphical EDA (3)
 
 **Summary Statistics**
 Both parameters in DF.3 are numeric variables. Their summary statistics are:
@@ -242,7 +238,7 @@ Both parameters in DF.3 are numeric variables. Their summary statistics are:
 kable(summary(DF.3), digits = 2, caption = "Summary Statistics for X and Y")
 ```
 
-X has a larger range than y. The it's mean and median are equal, indicating no skew. Y ranges from 3.1 to 9.26 and has a mean of 7.5. This is lower than the median (8.14) and indicates a
+X ranges from 4 to 14 and is uniformly distributed. Y has a mean of 7.5 and a median of 7.1, a difference of only 0.4 units, indicating a fairly symetrical distribution. 
 
 ** Interquartile Range, Skewness, and Kurtosis**
 
@@ -260,17 +256,9 @@ row.names(stats3) <- c("Standard Deviation", "IQR", "Skewness", "Kurtosis")
 kable(stats3, caption="Standard Deviation, IQR, Skewness, and Kurtosis for X, Y")
 ```
 
+Y is positively skewed with a skewness of 1.59. The kurtosis of y indicates a more peaked distribution compared to a Gaussian distribution. 
 
-The dispersion of the two parameters as indicated by the standard deviation is SD(x) = 3.3 units and SD(y) = 2.0 units.   
-
-Like the standard deviation, this shows more spread in the x parameter than y. 
-
-
-While the comparison of mean and median indicated the distributions of x and y would have little to no skew, I calculate it here to be comprehensive. Kurtosis measures the "peakedness" of the distribution relative to the Gaussian distribution. 
-
-Both measures of kurtosis are less than 3, indicating platykurtic distributions less peaked than a Gaussian distribution. 
-
-###Bivariate Non-Graphical EDA  
+###Bivariate Non-Graphical EDA (3)  
 **Covariance and Correlation**
 ```{r, echo=FALSE, warning=FALSE}
 CC3 <- data.frame(rbind(cov(DF.3), cor(DF.3)))
@@ -280,21 +268,21 @@ kable(CC3)
 
 The covariance between x and y is 5.5. This positive covariance values suggest that when one measurement is above the mean the other will probably also be above the mean, and vice versa. The correlation between x and y is 0.82, indicating a somewhat strong positive correlation between the two variables. 
 
-### Graphical EDA 
+### Graphical EDA (3)
 
 **Histogram for x and y**  
 ```{r, echo=FALSE}
 hist.plot(DF.3)
 ```
   
-The histogram for x shows a uniform distribution. This is characteristic of an independent variable that represents a uniform measurement scale. 
-
-**Scatterplot for DF.2**
+**Scatterplot**
 
 In EDA for a bivariate dataset a scatterplot will show the relationship between the two variables.
 ```{r, echo=FALSE}
 scatter.plot(DF.3)
 ```
+
+DF3 appears to have an outlying observation at x = 13. The rest of the data would be very well modeled with a linear regressing if this data point is eliminated. However, I would not immediately throw out the measurement at x = 13. If possible I would investigate the source of the data to determine if it can be explained. 
 
 ##Dataframe 4 - "IV"
 ###Summary Statistics and Non-graphical EDA
@@ -305,7 +293,7 @@ Both parameters in DF.4 are numeric variables. Their summary statistics are:
 kable(summary(DF.4), digits = 2, caption = "Summary Statistics for X and Y")
 ```
 
-X has a larger range than y. The it's mean and median are equal, indicating no skew. Y ranges from 3.1 to 9.26 and has a mean of 7.5. This is lower than the median (8.14) and indicates a
+X ranges from 8 to 19. The it's mean and median vary by 1, both measures are very close to the minimum indicating a strong positive skew. Y ranges from 5.25 to 12.5 and has a mean of 7.5, which is close to it's median of 7. 
 
 ** Interquartile Range, Skewness, and Kurtosis**
 
@@ -323,42 +311,45 @@ row.names(stats4) <- c("Standard Deviation", "IQR", "Skewness", "Kurtosis")
 kable(stats4, caption="Standard Deviation, IQR, Skewness, and Kurtosis for X, Y")
 ```
 
+Y exhibits a skewness of 1.3 and a kurtosis of 4.4. These indicate a distribution more peaked than Gaussian and with a positive skew. For x the IQR is zero. Further investigation reveals that the observations for x are nearly all 8.0, with a single measurement of 19. This is a stong indication that this measurement is an outlier. Unlike in DF.3, it would be best to eliminate this data point from consideration because the rest of the observations are uniform.
+```{r}
+DF.4.mod <- filter(DF.4, x == 8)
+```
 
-The dispersion of the two parameters as indicated by the standard deviation is SD(x) = 3.3 units and SD(y) = 2.0 units.   
 
-Like the standard deviation, this shows more spread in the x parameter than y. 
-
-
-While the comparison of mean and median indicated the distributions of x and y would have little to no skew, I calculate it here to be comprehensive. Kurtosis measures the "peakedness" of the distribution relative to the Gaussian distribution. 
-
-Both measures of kurtosis are less than 3, indicating platykurtic distributions less peaked than a Gaussian distribution. 
-
-###Bivariate Non-Graphical EDA  
+###Bivariate Non-Graphical EDA  (4)
 **Covariance and Correlation**
 ```{r, echo=FALSE, warning=FALSE}
-CC4 <- data.frame(rbind(cov(DF.4), cor(DF.4)))
+CC4 <- data.frame(rbind(cov(DF.4.mod), cor(DF.4)))
 row.names(CC4) <-c("Covariance X", "Covariance Y", "Correlation X", "Correlation Y")
 kable(CC4)
 ```
 
-The covariance between x and y is 5.5. This positive covariance values suggest that when one measurement is above the mean the other will probably also be above the mean, and vice versa. The correlation between x and y is 0.82, indicating a somewhat strong positive correlation between the two variables. 
+Eliminating the outlier at x = 19 creates a equal set where all x = 8. Therefore, the variable x has no variation and no ability to explain the variation in y. 
 
-### Graphical EDA 
+### Graphical EDA (4)
 
 **Histogram for x and y**  
 ```{r, echo=FALSE}
-hist.plot(DF.4)
+hist.plot(DF.4.mod)
 ```
   
-The histogram for x shows a uniform distribution. This is characteristic of an independent variable that represents a uniform measurement scale. 
+As 
 
-**Scatterplot for DF.2**
+**Scatterplot**
+A scatterplot is not appropriate for DF.4 as all observations of x = 8. 
 
-In EDA for a bivariate dataset a scatterplot will show the relationship between the two variables.
-```{r, echo=FALSE}
-scatter.plot(DF.4)
+
+***
+# SECTION 2 - COMPARISONS AND CONCLUSIONS 
+***
+**Correlation of X and Y**
+```{r}
+cor.all <- rbind(cor(DF.1)[2], cor(DF.2)[2], cor(DF.3)[2], cor(DF.4)[2])
+row.names(cor.all) <- c("DF.1", "DF.2", "DF.3", "DF.4")
+kable(data.frame(cor.all), digits = 2, col.names = c("Correlation"), caption = "X,Y correlations", align = "c")
 ```
 
-***
-SECTION 2 MULTIVARIATE ANALYSIS  
-***
+Note that despite four very different distributions in the y variable, the correlation of each dataset's x and y variable is 0.82. The big takeaway is that a taking multiple EDA approaches, including graphic and non-graphic techniques, is necissary to avoid analysis errors in the case of coincidences or patterns. There's no single "silver bullet" technique that always produces useful information. 
+
+
