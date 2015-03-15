@@ -10,7 +10,7 @@ output: html_document
 2. Use ggplot2
 3. Deliver report in Markdown on RPubs  
   
-> Packages used: dplyr, tidyr, moments, ggplot2, RColorBrewer, grid, scales
+> Packages used: knitr, dplyr, tidyr, moments, ggplot2
   
 ##EDA Resources
 
@@ -37,6 +37,8 @@ This method worked well for this small image. A privately hosted or desktop OCR 
 ```{r, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 library(dplyr)
 library(tidyr)
+library(knitr)
+library(ggplot2)
 ```
 ```{r}
 input <- read.csv("OCR_data_table.csv", skip = 1)
@@ -59,156 +61,304 @@ DF.all<- cbind(DF.1, DF.2, DF.3, DF.4)
 **Summary Statistics**
 Both parameters in DF.1 are numeric variables. Their summary statistics are:
 ```{r}
-summary(DF.1)
+kable(summary(DF.1), digits = 2, caption = "Summary Statistics for X and Y")
 ```
+
 X and Y have a similar range, with a lower bound of approximately 4 and an upper bound of approximately 14 and 10, respectively. The central tendency of the two parameters diverge by approximately 1.5 units with x being the larger mean (9 and 7.5, respectively). For both x and y the median and mean are the same or equal, indicating a symmetrical distribution. 
 
 ```{r}
-sd(DF.1$x)
-sd(DF.1$y)
-```
-The dispersion of the two parameters as indicated by the standard deviation is x = 3.3 units and y = 2.0 units.   
+sd1.x <- sd(DF.1$x)
+sd1.y <- sd(DF.1$y) 
+kable(data.frame(sd1.x, sd1.y), digits = 2, col.names = c("X", "Y"), caption = "Standard deviations for X and Y from DF.1", align = "c")
+```  
+  
+The dispersion of the two parameters as indicated by the standard deviation is SD(x) = 3.3 units and SD(y) = 2.0 units.   
 
 **IQR - Interquartile Range**
 
 As stated in Seltman, 2013: *"The IQR is a more robust measure of spread than the variance or standard deviation. Any number of values in the top or bottom quarters of the data can be moved any distance from the median without affecting the IQR at all. More practically, a few extreme outliers have little or no effect on the IQR."* The IQC for DF.1 is:
 ```{r}
-(IQR.x <- quantile(DF.1$x)[4] - quantile(DF.1$x)[2])
-(IQR.x <- quantile(DF.1$y)[4] - quantile(DF.1$y)[2])
+IQR1.x <- quantile(DF.1$x)[4] - quantile(DF.1$x)[2]
+IQR1.y <- quantile(DF.1$y)[4] - quantile(DF.1$y)[2]
+kable(data.frame(IQR1.x, IQR1.y), col.names = c("X", "Y"), caption = "Interquartile ranges for X and Y from DF.1", align = "c", row.names = FALSE)
 ```
+
+Like the standard deviation, this shows more spread in the x parameter than y. 
 
 **Skewedness and Krutosis**
 While the comparison of mean and median indicated the distributions of x and y would have little to no skew, I calculate it here to be comprehensive. Kurtosis measures the "peakedness" of the distribution relative to the Gaussian distribution. 
 ```{r, warning=FALSE}
 library(moments)
 
-skewness(DF.1$x)
-kurtosis(DF.1$x) 
-skewness(DF.1$y)
-kurtosis(DF.1$y)
+sk1.x <- skewness(DF.1$x)
+k1.x <- kurtosis(DF.1$x) 
+sk1.y <- skewness(DF.1$y)
+k1.y <- kurtosis(DF.1$y)
+kable(data.frame(IQR1.x, IQR1.y), col.names = c("X", "Y"), caption = "Skewness for X and Y from DF.1", align = "c")
+kable(data.frame(IQR1.x, IQR1.y), col.names = c("X", "Y"), caption = "Kurtosis for X and Y from DF.1", align = "c")
 ```
+  
 Both measures of kurtosis are less than 3, indicating platykurtic distributions less peaked than a Gaussian distribution. 
 
 ###Bivariate Non-Graphical EDA  
 Here I investigate the two variables x and y together using non-graphical techniques.   
 **Covariance and Correlation**
 ```{r}
-cov(DF.1)
-cor(DF.1)
+cov1 <- cov(DF.1)
+cor1 <- cor(DF.1)
+kable(data.frame(IQR1.x, IQR1.y), col.names = c("Covariance of X,Y", "Correlation of X, Y"), caption = "Correlation and Covariance for X and Y from DF.1", align = "c")
 ```
+
 The covariance between x and y is 5.5. This positive covariance values suggest that when one measurement is above the mean the other will probably also be above the mean, and vice versa. The correlation between x and y is 0.82, indicating a somewhat strong positive correlation between the two variables. 
 
 ### Graphical EDA 
 This EDA uses my own "house theme". The default graphics for ggplot2 are stellar, but by incorporating your own theme you can make it easier to identify and place your own work. 
 ```{r, warning=FALSE}
 library(ggplot2)
-library(RColorBrewer)
-library(scales)
-library(grid)
 ```
 **Jim's House Theme**
 ```{r}
 #Jim's House Theme
-JHT <- function(){
-# Generate the colors for the chart procedurally with RColorBrewer
-  palette <- brewer.pal("Greys", n=9)
-  color.background = palette[1]
-  color.grid.major = palette[3]
-  color.axis.text = palette[6]
-  color.axis.title = palette[9]
-  color.title = palette[9]
+JHT <-function(){
+  color.plot.area = "ivory"
+  color.background = "white"
+  color.grid.major = "black"
+  color.axis.text = "gray29"
+  color.axis.title = "gray29"
+  color.title = "gray29"
   
-  # Begin construction of chart
   theme_bw(base_size=9) +
-    
-    # Set the entire chart region to a light gray color
-    theme(panel.background=element_rect(fill=color.background, color=color.background)) +
+    theme(panel.background=element_rect(fill=color.plot.area, color=color.plot.area)) +
     theme(plot.background=element_rect(fill=color.background, color=color.background)) +
     theme(panel.border=element_rect(color=color.background)) +
-    
-    # Format the grid
-    theme(panel.grid.major=element_line(color=color.grid.major,size=.25, linetype = "longdash")) + 
+  
+    theme(panel.grid.major=element_line(color=color.grid.major,size=.25, 
+                                        linetype = "longdash")) + 
     theme(axis.line = element_line(color=color.grid.major, size = .5))+
     theme(panel.grid.minor=element_blank()) +
-    theme(axis.ticks=element_blank()) +
-    
-    # Format the legend, but hide by default
-    theme(legend.position="none") +
-    theme(legend.background = element_rect(fill=color.background)) +
-    theme(legend.text = element_text(size=7,color=color.axis.title)) +
+    #theme(axis.ticks=element_blank()) +
     
     # Set title and axis labels, and format these and tick marks
-    theme(plot.title=element_text(color=color.title, size=10, vjust=1.25)) +
+    theme(plot.title=element_text(color=color.title, size=10)) +
     theme(axis.text.x=element_text(size=12,color=color.axis.text)) +
     theme(axis.text.y=element_text(size=12,color=color.axis.text)) +
-    theme(axis.title.x=element_text(size=14,color=color.axis.title)) +
-    theme(axis.title.y=element_text(size=14,color=color.axis.title)) +
-    
-    # Plot margins
-    theme(plot.margin = unit(c(0.35, 0.2, 0.3, 0.35), "cm"))
+    theme(axis.title.x=element_text(size=14,color=color.axis.title, face = "bold")) +
+    theme(axis.title.y=element_text(size=14,color=color.axis.title, face = "bold")) 
 }
 ```
-
-Basic Scatterplot for Category 1
-
+**Histogram for x and y**
 ```{r}
-split.screen(figs=c(2,1))
-split.screen(c(1,2), screen=1)
 
-screen(1)
-plot(DF.1)
-
-screen(3)
-hist(DF.1$x)
-screen(4)
-hist(DF.1$y)
-
-screen(1)
-plot(DF.1)
-screen(2)
-hist(DF.1$x)
-screen(3)
-hist(DF.1$y)
-screen(4)
-plot(DF.1)
-close.screen(all = TRUE)
-
+hist.plot <- function(data){
+ ggplot(data = data, aes(x = x)) + geom_histogram(binwidth = 1) +JHT() +geom_density(color = "red") + ggtitle("Histogram     for DF.1 - x")
+  ggplot(data = data, aes(x = y)) + geom_histogram(binwidth = 1) +JHT() +geom_density(color = "red")+ ggtitle("Histogram for DF.1 - y")  
+}
+hist.plot(DF.1)
 ```
 
+The histogram for x shows a uniform distribution. This is characteristic of a independent variable that represents a uniform measurement scale. 
 
+**Scatterplot for DF.1**
 
-
-
+In EDA for a bivariate dataset a scatterplot will show the relationship between the two variables.
 ```{r}
-ggplot(data = DF.1, aes(x = x, y = y)) + geom_point() #+ JHT()
-ggplot(data = DF.1) + stat_density(aes(x = x, y=min(x)+diff(range(x))), geom="line") #+ JHT()
-
-stat_density(data = DF.1, x = x, geom = "area", aes(x = x, y = y))
+scatter.plot<- function(data){
+  ggplot(data = data, aes(x = x, y = y)) +geom_point() +JHT() + geom_smooth(method="lm", color="red", linetype=2) + geom_rug() + ggtitle("Scatterplot for DF1 with a Line of Best Fit")
+}
+scatter.plot(DF.1)
 ```
-
-```{r}
-ggplot(DF.1, aes(x = y), binwidth = 2) + 
-       geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5) + 
-       geom_density(colour = 'blue') + xlab(expression(bold('Simulated Samples'))) + 
-       ylab(expression(bold('Density')))
-```
-
-
 
 
 ##Dataframe 2 - "II"
 ###Summary Statistics and Non-graphical EDA
 
-###Bivariate Non-Graphical EDA
+**Summary Statistics**
+Both parameters in DF.2 are numeric variables. Their summary statistics are:
+```{r, echo=FALSE}
+kable(summary(DF.2), digits = 2, caption = "Summary Statistics for X and Y")
+```
+
+X has a larger range than y. The it's mean and median are equal, indicating no skew. Y ranges from 3.1 to 9.26 and has a mean of 7.5. This is lower than the median (8.14) and indicates a
+
+** Interquartile Range, Skewness, and Kurtosis**
+
+```{r, echo=FALSE}
+sd.x <- sd(DF.2$x)
+sd.y <- sd(DF.2$y)
+IQR1.x <- quantile(DF.2$x)[4] - quantile(DF.2$x)[2]
+IQR1.y <- quantile(DF.2$y)[4] - quantile(DF.2$y)[2]
+skewness.x <- skewness(DF.2$x)
+krutosis.x <- kurtosis(DF.2$x) 
+skewness.y <- skewness(DF.2$y)
+kurtosis.y <- kurtosis(DF.2$y)
+stats2 <-data.frame(rbind(sd.x, IQR1.x,  skewness.x, krutosis.x), rbind(sd.y, IQR1.y, skewness.y, kurtosis.y))
+row.names(stats2) <- c("Standard Deviation", "IQR", "Skewness", "Kurtosis")
+kable(stats2, caption="Standard Deviation, IQR, Skewness, and Kurtosis for X, Y")
+```
+
+
+The dispersion of the two parameters as indicated by the standard deviation is SD(x) = 3.3 units and SD(y) = 2.0 units.   
+
+Like the standard deviation, this shows more spread in the x parameter than y. 
+
+
+While the comparison of mean and median indicated the distributions of x and y would have little to no skew, I calculate it here to be comprehensive. Kurtosis measures the "peakedness" of the distribution relative to the Gaussian distribution. 
+
+Both measures of kurtosis are less than 3, indicating platykurtic distributions less peaked than a Gaussian distribution. 
+
+###Bivariate Non-Graphical EDA  
+**Covariance and Correlation**
+```{r, echo=FALSE, warning=FALSE}
+CC2 <- data.frame(rbind(cov(DF.2), cor(DF.2)))
+row.names(CC2) <-c("Covariance X", "Covariance Y", "Correlation X", "Correlation Y")
+kable(CC2)
+```
+
+The covariance between x and y is 5.5. This positive covariance values suggest that when one measurement is above the mean the other will probably also be above the mean, and vice versa. The correlation between x and y is 0.82, indicating a somewhat strong positive correlation between the two variables. 
 
 ### Graphical EDA 
 
+**Histogram for x and y**  
+```{r, echo=FALSE}
+hist.plot(DF.2)
+```
+  
+The histogram for x shows a uniform distribution. This is characteristic of an independent variable that represents a uniform measurement scale. 
+
+**Scatterplot for DF.2**
+
+In EDA for a bivariate dataset a scatterplot will show the relationship between the two variables.
+```{r, echo=FALSE}
+scatter.plot(DF.2)
+```
 
 
+##Dataframe 3 - "III"
+###Summary Statistics and Non-graphical EDA
+
+**Summary Statistics**
+Both parameters in DF.3 are numeric variables. Their summary statistics are:
+```{r, echo=FALSE}
+kable(summary(DF.3), digits = 2, caption = "Summary Statistics for X and Y")
+```
+
+X has a larger range than y. The it's mean and median are equal, indicating no skew. Y ranges from 3.1 to 9.26 and has a mean of 7.5. This is lower than the median (8.14) and indicates a
+
+** Interquartile Range, Skewness, and Kurtosis**
+
+```{r, echo=FALSE}
+sd3.x <- sd(DF.3$x)
+sd3.y <- sd(DF.3$y)
+IQR3.x <- quantile(DF.3$x)[4] - quantile(DF.3$x)[2]
+IQR3.y <- quantile(DF.3$y)[4] - quantile(DF.3$y)[2]
+skewness3.x <- skewness(DF.3$x)
+krutosis3.x <- kurtosis(DF.3$x) 
+skewness3.y <- skewness(DF.3$y)
+kurtosis3.y <- kurtosis(DF.3$y)
+stats3 <-data.frame(rbind(sd3.x, IQR3.x,  skewness3.x, krutosis3.x), rbind(sd3.y, IQR3.y, skewness3.y, kurtosis3.y))
+row.names(stats3) <- c("Standard Deviation", "IQR", "Skewness", "Kurtosis")
+kable(stats3, caption="Standard Deviation, IQR, Skewness, and Kurtosis for X, Y")
+```
 
 
+The dispersion of the two parameters as indicated by the standard deviation is SD(x) = 3.3 units and SD(y) = 2.0 units.   
+
+Like the standard deviation, this shows more spread in the x parameter than y. 
+
+
+While the comparison of mean and median indicated the distributions of x and y would have little to no skew, I calculate it here to be comprehensive. Kurtosis measures the "peakedness" of the distribution relative to the Gaussian distribution. 
+
+Both measures of kurtosis are less than 3, indicating platykurtic distributions less peaked than a Gaussian distribution. 
+
+###Bivariate Non-Graphical EDA  
+**Covariance and Correlation**
+```{r, echo=FALSE, warning=FALSE}
+CC3 <- data.frame(rbind(cov(DF.3), cor(DF.3)))
+row.names(CC3) <-c("Covariance X", "Covariance Y", "Correlation X", "Correlation Y")
+kable(CC3)
+```
+
+The covariance between x and y is 5.5. This positive covariance values suggest that when one measurement is above the mean the other will probably also be above the mean, and vice versa. The correlation between x and y is 0.82, indicating a somewhat strong positive correlation between the two variables. 
+
+### Graphical EDA 
+
+**Histogram for x and y**  
+```{r, echo=FALSE}
+hist.plot(DF.3)
+```
+  
+The histogram for x shows a uniform distribution. This is characteristic of an independent variable that represents a uniform measurement scale. 
+
+**Scatterplot for DF.2**
+
+In EDA for a bivariate dataset a scatterplot will show the relationship between the two variables.
+```{r, echo=FALSE}
+scatter.plot(DF.3)
+```
+
+##Dataframe 4 - "IV"
+###Summary Statistics and Non-graphical EDA
+
+**Summary Statistics**
+Both parameters in DF.4 are numeric variables. Their summary statistics are:
+```{r, echo=FALSE}
+kable(summary(DF.4), digits = 2, caption = "Summary Statistics for X and Y")
+```
+
+X has a larger range than y. The it's mean and median are equal, indicating no skew. Y ranges from 3.1 to 9.26 and has a mean of 7.5. This is lower than the median (8.14) and indicates a
+
+** Interquartile Range, Skewness, and Kurtosis**
+
+```{r, echo=FALSE}
+sd4.x <- sd(DF.4$x)
+sd4.y <- sd(DF.4$y)
+IQR4.x <- quantile(DF.4$x)[4] - quantile(DF.4$x)[2]
+IQR4.y <- quantile(DF.4$y)[4] - quantile(DF.4$y)[2]
+skewness4.x <- skewness(DF.4$x)
+krutosis4.x <- kurtosis(DF.4$x) 
+skewness4.y <- skewness(DF.4$y)
+kurtosis4.y <- kurtosis(DF.4$y)
+stats4 <-data.frame(rbind(sd4.x, IQR4.x,  skewness4.x, krutosis4.x), rbind(sd4.y, IQR4.y, skewness4.y, kurtosis4.y))
+row.names(stats4) <- c("Standard Deviation", "IQR", "Skewness", "Kurtosis")
+kable(stats4, caption="Standard Deviation, IQR, Skewness, and Kurtosis for X, Y")
+```
+
+
+The dispersion of the two parameters as indicated by the standard deviation is SD(x) = 3.3 units and SD(y) = 2.0 units.   
+
+Like the standard deviation, this shows more spread in the x parameter than y. 
+
+
+While the comparison of mean and median indicated the distributions of x and y would have little to no skew, I calculate it here to be comprehensive. Kurtosis measures the "peakedness" of the distribution relative to the Gaussian distribution. 
+
+Both measures of kurtosis are less than 3, indicating platykurtic distributions less peaked than a Gaussian distribution. 
+
+###Bivariate Non-Graphical EDA  
+**Covariance and Correlation**
+```{r, echo=FALSE, warning=FALSE}
+CC4 <- data.frame(rbind(cov(DF.4), cor(DF.4)))
+row.names(CC4) <-c("Covariance X", "Covariance Y", "Correlation X", "Correlation Y")
+kable(CC4)
+```
+
+The covariance between x and y is 5.5. This positive covariance values suggest that when one measurement is above the mean the other will probably also be above the mean, and vice versa. The correlation between x and y is 0.82, indicating a somewhat strong positive correlation between the two variables. 
+
+### Graphical EDA 
+
+**Histogram for x and y**  
+```{r, echo=FALSE}
+hist.plot(DF.4)
+```
+  
+The histogram for x shows a uniform distribution. This is characteristic of an independent variable that represents a uniform measurement scale. 
+
+**Scatterplot for DF.2**
+
+In EDA for a bivariate dataset a scatterplot will show the relationship between the two variables.
+```{r, echo=FALSE}
+scatter.plot(DF.4)
+```
 
 ***
 SECTION 2 MULTIVARIATE ANALYSIS  
 ***
-
